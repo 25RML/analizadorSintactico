@@ -1,0 +1,27 @@
+
+
+## Operaciones Matematicas
+
+class mainClass<public, main>
+{
+	summon constructorDX() {}  # Obligatorio para que funcione el compilador
+
+	define empty mainMethod<public> ()
+	{
+		# Recepcion de Numeros por Teclado
+		define real num1<> = 0;
+		num1 = read("La suma es " +num1 + num2);
+		define real num2<> = 0;
+		num2 = read("La suma es " +num1 + num2);
+		# Sumar y Mostrar
+		say("La suma es " +num1 + num2);
+		say("La resta es " +num1 - num2);
+		say("La multiplicacion es "+ (num1 * num2));
+		say("La division es "+ (num1 / num2));
+
+		when (algo == true)
+		{
+			
+		};
+	}
+}

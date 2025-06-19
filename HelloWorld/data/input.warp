@@ -1,0 +1,82 @@
+﻿# Variable Global
+define int year<last> = 2025;
+
+define class mainClass<public,main>
+{
+	define int mainMethod<public> ()
+	{
+		# Preguntar
+		say("En que year estamos?\n");
+		# Obtener Respuesta
+		define int respuesta<private> = read("Respuesta -> ");
+		when (respuesta != year)
+		{
+			say("El year es incorrecto!, estamos en " + year);
+		}
+		but
+		{
+			say("La respuesta es correcta!");
+		}
+	}
+}
+
+
+
+# Variable Global
+define int year<last> = 2025;
+
+class mainClass<public,main>
+{
+	define int atributoEj<public> = (hola+adios/56.4^(56*23.5) );
+
+	summon constructorDX() {}
+
+	define int mainMethod<public>()
+	{
+		# Preguntar
+		say("En que year estamos?\n");
+		# Obtener Respuesta
+		define int respuesta<> = 90;
+		when (respuesta != year)
+		{
+			say("El year es incorrecto!, estamos en " + year);
+		}
+		but
+		{
+			say("La respuesta es correcta!");
+		}
+	}
+}
+
+
+
+
+class mainClass<public, main>
+{
+
+	summon nose() {}  # Obligatorio para que funcione el compilador
+	
+	define empty mainMethod<public> ()
+	{
+		define int num1<last> = 7;
+		define int num2<last> = 10;
+		
+		printSomething();		# Este es un Comentario
+		printSomething();		# printSomething()
+		printSomething();
+		define int suma<> = 16;
+		say("La suma es -> " + suma);
+		
+	}
+	# Metodos adicionales
+	define int sum<public>(int a, int b)
+	{	
+		# Sumar 2 numeros y devolverlos
+		throw a + b;
+	}
+	define empty printSomething<public>()
+	{
+		# Imprimir Algo
+		say("Hola Mundo!");
+	}
+}
