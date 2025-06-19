@@ -8,11 +8,18 @@ class mainClass<public, main>
 
 	define empty mainMethod<public> ()
 	{
-		inspect hola{
-			select: 3 {
-				say("hola");
-			} jump;
-			select: none {} jump;
+		loop (int isad = 5; isad<56; id++) {
+		};
+	}
+}
+
+define class mainClass
+{
+	summon constructorDX() {}  # Obligatorio para que funcione el compilador
+
+	define empty mainMethod<public> ()
+	{
+		loop (int isad = 5; isad<56; id++) {
 		};
 	}
 }
