@@ -1,25 +1,7 @@
-
-
 ## Operaciones Matematicas
+
+define int nota<> = ( ((5 + 3.2) * (true + false + 1)) / (10 - (3 * 2)) ) + ( (7 > 3) & !(false || (2 == 2)) ) * (4.5 + 1.5) - ( ((20 / 4) ^ 2) % 3 ) + (10 // 3) + ( ((5 <= 5) || (3 != 3)) & (8.2 * 0.5 > 3) );
 
 class mainClass<public, main>
 {
-	summon constructorDX() {}  # Obligatorio para que funcione el compilador
-
-	define empty mainMethod<public> ()
-	{
-		loop (int isad = 5; isad<56; id++) {
-		};
-	}
-}
-
-define class mainClass
-{
-	summon constructorDX() {}  # Obligatorio para que funcione el compilador
-
-	define empty mainMethod<public> ()
-	{
-		loop (int isad = 5; isad<56; id++) {
-		};
-	}
 }
