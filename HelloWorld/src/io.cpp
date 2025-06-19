@@ -34,10 +34,10 @@ int main() {
     
     mainParser.analyzeInput();
 	//"switch (hola) {}"
-    
 
     //lexicAnalyzer analyze{ fileContent };
     //analyze.tokenTable();
+    //mainParser.analyzer.tokenTable();
 
 	std::cout << "\n\nEND";
 
