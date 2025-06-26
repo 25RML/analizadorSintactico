@@ -27,6 +27,9 @@
     <ClCompile Include="src\tasBuilder.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="src\ts.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\linkedList.h">
@@ -41,13 +44,14 @@
     <ClInclude Include="include\tasBuilder.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="include\ts.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="data\input.warp">
-      <Filter>Archivos de recursos</Filter>
-    </Text>
+    <None Include="data\input.warp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\sepudriotodo.warp" />
+    <Text Include="data\TAS.txt" />
   </ItemGroup>
 </Project>

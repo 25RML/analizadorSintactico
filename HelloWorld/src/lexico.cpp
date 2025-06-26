@@ -1,3 +1,5 @@
+#define DEBUG_LIST
+
 #include <string>
 #include <string_view>
 #include <iostream>

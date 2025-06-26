@@ -170,28 +170,20 @@
     <ClCompile Include="src\lexico.cpp" />
     <ClCompile Include="src\lr.cpp" />
     <ClCompile Include="src\tasBuilder.cpp" />
+    <ClCompile Include="src\ts.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\lexico.h" />
     <ClInclude Include="include\linkedList.h" />
     <ClInclude Include="include\lr.h" />
     <ClInclude Include="include\tasBuilder.h" />
+    <ClInclude Include="include\ts.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="data\input.warp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-      <FileType>Document</FileType>
-    </Text>
+    <None Include="data\input.warp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\sepudriotodo.warp" />
+    <Text Include="data\TAS.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

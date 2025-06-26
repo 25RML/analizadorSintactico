@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 
 template <typename dataType>
@@ -15,6 +16,21 @@ private:
     node* head{};
     node* last{};
     std::size_t size{};
+public:
+    class iterator {
+        node* current;
+    public:
+        iterator(node* ptr) : current(ptr) {}
+
+        dataType& operator*() const { return current->data; }      // Dereference
+        dataType* operator->() const { return &(current->data); }  // Arrow operator
+
+        iterator& operator++() { current = current->next; return *this; }   // Prefix ++
+        iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; } // Postfix ++
+
+        bool operator==(const iterator& other) const { return current == other.current; }
+        bool operator!=(const iterator& other) const { return current != other.current; }
+    };
 public:
     // ------------------------------------------ CONSTRUCTORS & DESTRUCTORS ------------------------------------------
     linkedList() : head{ nullptr }, last{ nullptr }, size{ 0 } {}
@@ -77,17 +93,18 @@ public:
         return *this;
     }
     // ------------------------------------------ APPEND ------------------------------------------
-    void append(const dataType value = dataType{}) {
+    dataType& append(const dataType value = dataType{}) {
         if (size == 0) {
             head = new node(value);
             last = head;
             ++size;
-            return;
+            return head->data;
         }
         node* newNode = new node(value);
         last->next = newNode;
         last = newNode;
         ++size;
+        return newNode->data;
     }
     void append(const linkedList<dataType>& address)
     {
@@ -105,8 +122,13 @@ public:
         erase(0);
         return value;
     }
-    void pop(int amount) {
-        for (int i{ 0 }; i < amount; ++i) pop();
+    linkedList<dataType> pop(int amount) {
+        // Safety Check
+        if (amount > static_cast<int>(size)) throw std::out_of_range("Cannot pop more elements than exist in the list");
+        // Return a popped linkedList
+        linkedList<dataType> poppedList{};
+        for (int i{ 0 }; i < amount; ++i) poppedList.append(pop());
+        return poppedList;
     }
     // ------------------------------------------ PUSH ------------------------------------------
     void push(const dataType value = dataType{}) {
@@ -180,6 +202,7 @@ public:
         size = 0;
     }
     // ------------------------------------------ FIND ------------------------------------------
+#ifdef LINKEDLIST_FIND
     dataType& find(const dataType& search) const {
         node* runner{ head };
         while (runner) {
@@ -188,7 +211,8 @@ public:
         }
         return runner->data;
     }
-    std::size_t getSize() { return size; }
+#endif // LINKEDLIST_FIND
+    std::size_t getSize() const { return size; }
     // ------------------------------------------ MOVE ------------------------------------------
     void move(const int fromIndex, const int toIndex) {
         if (fromIndex == toIndex) return; // No need to move
@@ -198,15 +222,29 @@ public:
         dataType value = getNode(fromIndex)->data;
         erase(fromIndex);
         insert(toIndex, value);
-	}
+    }
+    // ------------------------------------------ BACK ------------------------------------------
+    dataType& back() {
+        if (!last) throw std::out_of_range("Empty list");
+        return last->data;
+    }
+    const dataType& back() const {
+        if (!last) throw std::out_of_range("Empty list");
+        return last->data;
+    }
+    // ------------------------------------------ ITERATORS ------------------------------------------
+    iterator begin() const { return iterator(head); }
+    iterator end() const { return iterator(nullptr); }
     // ------------------------------------------ DEBUG ------------------------------------------
+#ifdef DEBUG_LIST
     void debug() const {
         node* printer{ head };
         //std::cout << '[';
         while (printer) {
-            std::cout << ' ' << printer->data;
+            std::cout << ' ';
+            std::cout << printer->data;
             printer = printer->next;
-            if (printer) std::cout << ", ";
+            //if (printer) std::cout << ", ";
         }
         //std::cout << " ] Size: " << size;
     }
@@ -217,6 +255,16 @@ public:
             printer = printer->next;
         }
     }
+    void printReverse() const {
+        printReverseHelper(head);
+    }
+private:
+    void printReverseHelper(const node* current) const {
+        if (!current) return;
+        printReverseHelper(current->next);
+        std::cout << current->data;
+    }
+#endif // !DEBUG_LIST
 private:
     // Private Methods (Updaters, etc)
     void pushHelp(const node* current) {

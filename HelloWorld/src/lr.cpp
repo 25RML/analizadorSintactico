@@ -1,3 +1,5 @@
+#define DEBUG_LIST
+
 #include <utility>
 #include <string>
 
@@ -14,10 +16,11 @@
 actionTable::actionTable(linkedList<column> tableSet) : table{ tableSet } {}
 actionTable::actionTable() : table{} {}
 action actionTable::getAction(int token, int group) {
-	for (int i{ 0 }; i < static_cast<int>(table.getSize()); ++i) {
-		if (table[i].token == token) {
-			for (int j{ 0 }; j < static_cast<int>(table[i].entries.getSize()); ++j) {
-				if (table[i].entries[j].groupStart == group) return table[i].entries[j].action;	// this might be running in O(n^4) :c
+
+	for (auto& col : table) {
+		if (col.token == token) {
+			for (auto& entry : col.entries) {
+				if (entry.groupStart == group) return entry.action;	// running in n^2 :D
 			}
 			break;
 		}
@@ -147,13 +150,12 @@ void parserLR0::analyzeInput() {
 }
 // ----------------------------------------------- Get Number of Rules
 std::pair<int,int> parserLR0::numberOfRules(int index) {
-	std::pair<int, int> returnValue{};
-	for (int i{ 0 }; i < static_cast<int>(productionRules.getSize()); ++i) {
-		if (productionRules[i].id == index) {
-			return { productionRules[i].n_rightSide, productionRules[i].letter};
+	for (auto& rule : productionRules) {
+		if (rule.id == index) {
+			return { rule.n_rightSide, rule.letter };
 		}
 	}
-	return {-99,-99};
+	return {-999,-999};
 }
 // ----------------------------------------------- Panic Mode
 void parserLR0::panicMode() {
