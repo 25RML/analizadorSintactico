@@ -130,6 +130,7 @@ public:
 	lexicAnalyzer analyzer{};
 	// ----------------------------------------------- Builders
 	parserLR0(actionTable tableInput, linkedList<pRules> rulesList, std::string input = "");	// Builder
+	parserLR0(std::string input = "");
 	// ----------------------------------------------- Analyze Inputs
 	void analyzeInput();
 	std::pair<int,int> numberOfRules(int index);
@@ -139,3 +140,6 @@ public:
 std::string printToken(int token);
 void printRule(int id);
 std::string printNT(int idNT);
+
+actionTable importTAS();
+linkedList<pRules> importRULES();

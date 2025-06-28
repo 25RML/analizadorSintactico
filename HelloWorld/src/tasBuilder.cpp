@@ -2,7 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <map>
 
+#include "lexico.h"
 #include "tasBuilder.h"
 #include "linkedList.h"
 #include "lr.h"
@@ -15,11 +17,20 @@ using d_subGroup = linkedList<d_subEntry>;
 // =================================================================================================================================
 //														Constructor
 // =================================================================================================================================
-TAS_Builder::TAS_Builder(linkedList<architecture::rule> input, linkedList<architecture::first> firstList) : ruleSet{input}, firstList{firstList} {}
+TAS_Builder::TAS_Builder(linkedList<architecture::rule> input) : ruleSet{input} {}
+TAS_Builder::TAS_Builder() : ruleSet{} {}
 // =================================================================================================================================
 //														TAS BUILDER
 // =================================================================================================================================
 void TAS_Builder::tasBuilder() {
+	ruleSet.clear();
+	generateRules();
+	// ================================ Firsts List Generation ================================
+	std::cout << "\n =========================== Creating Firsts:";
+	generateFirstList();
+	std::cout << "\n[OK] Finished creation of firsts ";
+	//printFirstList();
+	// ================================ Groups Generation ================================
 	architecture::groupEntry startRule{ initRule(input::g_startRule) };
 
 	d_subGroup newGroup{};
@@ -95,10 +106,14 @@ void TAS_Builder::tasBuilder() {
 	std::cout << "\n[OK] TAS created succesfully, number of columns generated -> " << TAS_Return.getSize();
 
 	exportTAS();
+	exportFinal();
 }
 // =================================================================================================================================
 //													Function Definitions
 // =================================================================================================================================
+
+// Crea una regla de tipo groupEntry a partir de una sola regla comun.
+// Esta funcion ya casi no se usa en el cosigo								
 architecture::groupEntry TAS_Builder::initRule(const architecture::rule& target) {
 	return architecture::groupEntry{ &target };
 }
@@ -133,9 +148,9 @@ architecture::groupEntry* TAS_Builder::insertOrFindSubGroup(const architecture::
 			return &entry;
 	return &groupStackRef.append(target);
 }
-/* Esta funcion recibe como parametro una lista de similares, y crea y agrega a la lista de referencia de transiciones
-* la respectiva regla que generara un grupo N. Devuelve la id del grupo destino, y si la regla ya existe, entonces devuelve
-* la id del grupo al que se iria.                                                               */
+// Esta funcion recibe como parametro una lista de similares, y crea y agrega a la lista de referencia de transiciones
+// la respectiva regla que generara un grupo N. Devuelve la id del grupo destino, y si la regla ya existe, entonces devuelve
+// la id del grupo al que se iria.                                                              
 int TAS_Builder::moveAndTransition(const linkedList<architecture::groupEntry*>& similarGroup) {
 
 	architecture::groupTransition* transitionTarget{ transitionTo(similarGroup) };
@@ -160,6 +175,7 @@ int TAS_Builder::moveAndTransition(const linkedList<architecture::groupEntry*>& 
 	std::cout << "\nGenerated group " << groupAt;
 	return groupAt;
 }
+// Esta funcion verifica entre 2 grupos de transicion (source y target) si todos los elementos de un grupo estan en el otro y viceversa
 bool TAS_Builder::isIncludedOnTransition(const architecture::groupTransition& source, const architecture::groupTransition& target) {
 	int matchFound{ false };
 	if (source.subEntries.getSize() > target.subEntries.getSize()) {
@@ -191,15 +207,22 @@ bool TAS_Builder::isIncludedOnTransition(const architecture::groupTransition& so
 // =================================================================================================================================
 //														 Auxiliary
 // =================================================================================================================================
+// Obtiene los primeros de una regla de production buscando usando la id de la letra que genera dicha produccion
+// Tira una excepcion de no encontrar ni una, ya que si esta funcion falla, la TAS no podra generarse
 linkedList<int>& TAS_Builder::getFirstByID(const int id) {
 	for (auto& first : firstList) if (first.leftSide_ID == id) return first.firstList;
 	throw std::runtime_error("ID for leftside not found, check the source or code;");	// Error
 }
+// Verifica si una regla de produccion (con puntero) permite la creacion de similares desde su estado actual. Ejemplo:
+// A -> 0B id  (true)   |  A -> B 0id (false) 
 bool TAS_Builder::ifValidStep(const architecture::groupEntry& target) {
 	if (target.pointer >= target.ruleRef->rightSide.getSize()) return false;
 	if (target.ruleRef->rightSide[target.pointer] < 0) return true;
 	return false;
 }
+// Esta funcion obtiene los tokens de anticipacion en base a una posicion de una regla de produccion con puntero
+// La funcion debe recibir una regla de produccion con puntero que haya sido validada por la funcion ifValidStep, comportamiento
+// inesperado puede ocurrir de no hacerse asi.
 linkedList<int> TAS_Builder::getFirstFromRight(const architecture::groupEntry& target) {
 	// Check first for end of line
 	if (target.pointer + 1 >= target.ruleRef->rightSide.getSize()) return linkedList<int>{ target.anticipationToken };
@@ -212,6 +235,8 @@ linkedList<int> TAS_Builder::getFirstFromRight(const architecture::groupEntry& t
 	if (firstL.getSize() == 0) return linkedList<int>{ target.anticipationToken };
 	else return firstL;
 }
+// Esta funcion obtiene el conjunto de similares que se extraen de un grupo de reglas de produccion con puntero
+// No devolvera similares que hayan llegando al final de la regla (Ej: A -> id0)
 linkedList< linkedList<architecture::groupEntry*>> TAS_Builder::getSimilars(const linkedList<architecture::groupEntry*>& group) {
 	linkedList<d_subGroup> similars{};
 	d_subGroup analyzeGroup{ group };	// Copy and iterate
@@ -233,6 +258,7 @@ linkedList< linkedList<architecture::groupEntry*>> TAS_Builder::getSimilars(cons
 	}
 	return similars;
 }
+// Esta funcion genera un conjunto de reglas de produccion con puntero en base a un grupo de similares.
 linkedList<architecture::groupEntry*> TAS_Builder::generateGroupFrom(linkedList<architecture::groupEntry> groupSource) {
 	// Variable Declaration
 	d_subGroup groupReturn{};
@@ -254,6 +280,8 @@ linkedList<architecture::groupEntry*> TAS_Builder::generateGroupFrom(linkedList<
 	// End
 	return groupReturn;
 }
+// Esta funcion retorna el puntero de la regla de transicion en la referencia global que sea equivalente
+// a la regla de transicion pasada por referencia, de no encontrar nada, devuelve nullptr
 architecture::groupTransition* TAS_Builder::transitionTo(const linkedList<architecture::groupEntry*>& ref) {
 	int matchCount{};
 	int matchReq{};
@@ -273,6 +301,9 @@ architecture::groupTransition* TAS_Builder::transitionTo(const linkedList<archit
 	}		
 	return nullptr;
 }
+// Esta funcion combina reglas de transicion similares.
+// El conjunto destino por defecto de esta regla combinada sera igual al que poseia el parametro combineTo
+// Devuelve un int equivalente al grupo destino de toCombine
 int TAS_Builder::combineTransitions(const architecture::groupTransition& toCombine, architecture::groupTransition& combineTo) {
 	bool isAbleTo{ true };
 	for (auto& toEval : toCombine.subEntries) {
@@ -295,11 +326,107 @@ int TAS_Builder::combineTransitions(const architecture::groupTransition& toCombi
 	combineTo.groupOrigin = appendSmart(combineTo.groupOrigin, toCombine.groupOrigin);
 	return toCombine.groupDestiny;
 }
+// Esta funcion devuelve un puntero hacia la columna de la TAS generada con un token igual al pasado por parametro
 column* TAS_Builder::findToken(int token) {
 	for (auto& columnValue : TAS_Return) {
 		if (columnValue.token == token) return &columnValue;
 	}
 	return nullptr;
+}
+// Esta funcion genera la lista de referencia de todos los primeros en base a las reglas de produccion de referencia
+void TAS_Builder::generateFirstList() {
+	for (auto& rule : ruleSet) {
+		generateFirst(rule.leftSide_ID);
+	}
+
+
+}
+// Returns First List of ID, if ID doesn't has one, generates one
+linkedList<int>& TAS_Builder::generateFirst(int id) {
+	// Found Similarity
+	architecture::first* firstTarget{ insertFirst(id) };
+	if (firstTarget->firstList.getSize() > 0) return firstTarget->firstList;
+	// Recursive until find
+	for (auto& ruleEntry : ruleSet) {
+		if (ruleEntry.leftSide_ID == id) {
+			for (auto& token : ruleEntry.rightSide) {
+				if (token == id) break;						// Token = id, then skip / Ej: A -> A ...
+				if (token > 0) {							// Token = terminal, add / Ej: A -> a ...
+					appendNoRepeat(firstTarget->firstList, token);
+					break;
+				}
+				else {										// Token = N-terminal, add all first of NT / Ej: A -> B
+					appendNoRepeat(firstTarget->firstList, generateFirst(token));
+					if (!isEmptyProduction(token)) break;	// If token has at least 1 empty production, continue analizing
+				}
+			}
+		}
+	}
+	if (firstTarget->firstList.getSize() == 0) throw std::runtime_error("Couldn't find any valid first value");
+	else return firstTarget->firstList;
+}
+// Esta funcion inserta una entrada de conjunto de primeros vacia a la lista de referencia, pero si existe una,
+// devuelve un puntero hacia esa entrada. Por defecto, devuelve un puntero hacia la entrada recien generada
+architecture::first* TAS_Builder::insertFirst(int id) {
+	for (auto& firstRule : firstList) if (firstRule.leftSide_ID == id) return &firstRule;
+	return &firstList.append({ id,{} });
+}
+// Esta funcion devuelve verdadero si existe al menos una regla de produccion vacia con la id del parametro,
+// caso contrario, devuelve falso (cuando todas las producciones generan al menos un token)
+bool TAS_Builder::isEmptyProduction(int id) {
+	for (auto& rule : ruleSet) {
+		if (rule.leftSide_ID == id) if (rule.rightSide.getSize() == 0) return true;
+	}
+	return false;
+}
+// Esta funcion genera las reglas de produccion de referencia en base a lo introducido en el archivo "rules_definition.txt"
+// Emplea un analizador lexico para detectar cada regla y bota excepciones en caso de errores detectados
+void TAS_Builder::generateRules() {
+	std::map<std::string, int> mapReference;
+	int saveToken{};
+	int letterID{ 0 };
+	int ruleID{ 0 };
+	std::string saveBuffer{};
+
+	std::ofstream output("data/import/rules_map.txt");
+	std::ifstream file("data/rules_definition.txt");
+	std::string fileContent;
+	std::string line;
+
+	architecture::rule ruleApp{};
+	while (std::getline(file, line)) {
+		ruleApp.rightSide.clear();
+		lexicAnalyzer ruleAnalysis{ line };
+		if (ruleAnalysis.nextToken() == 600) {	// If token matches id definition
+			saveBuffer = ruleAnalysis.getBuffer();
+			if (saveBuffer == "id") throw std::runtime_error("Can't place 'id' on leftside");
+			auto it = mapReference.find(saveBuffer);
+			if (it == mapReference.end()) mapReference[saveBuffer] = --letterID;	// id doesn't exists
+
+			ruleApp.rule_ID = ++ruleID;
+			ruleApp.leftSide_ID = mapReference[saveBuffer];
+		}
+		else throw std::runtime_error("Invalid leftside in rules_definition.txt");
+		if (ruleAnalysis.nextToken() != 807) throw std::runtime_error("Couldn't find ':' in rule definition in rules_definition.txt");
+		// Append all tokens
+		while ((saveToken = ruleAnalysis.nextToken()) != 0) {
+			if (saveToken == -1) throw std::runtime_error("Couldn't find token conversion for " + ruleAnalysis.getBuffer());
+			// Detected token ID
+			if (saveToken == 600 && (saveBuffer = ruleAnalysis.getBuffer()) != "id") {
+				auto it = mapReference.find(saveBuffer);
+				if (it == mapReference.end()) mapReference[saveBuffer] = --letterID; // id doesn't exists
+
+				saveToken = mapReference[saveBuffer];
+			}
+			ruleApp.rightSide.append(saveToken);
+		}
+		std::cout << "\nImported Rule: " << ruleApp.rule_ID << ' ' << ruleApp.leftSide_ID << ' '; for (auto& entry : ruleApp.rightSide) std::cout << entry << ' ';
+		ruleSet.append(ruleApp);
+		output << ruleID << ' ' << line << '\n';
+	}
+	file.close();
+	output.close();
+
 }
 
 void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toKeep, int toReplace) {
@@ -343,9 +470,19 @@ linkedList<int> appendSmart(linkedList<int> toModify, linkedList<int> toAppend) 
 	else if (toAppend.getSize() > 0) returnList.append(toAppend);
 	return returnList;
 }
-//bool ifInGroup(const linkedList<architecture::groupEntry>& source, const linkedList<architecture::groupEntry>& target) {
-//	for 
-//}
+
+void appendNoRepeat(linkedList<int>& source, int value) {
+	for (auto& i : source) if (i == value) return;
+	source.append(value);
+}
+void appendNoRepeat(linkedList<int>& source, linkedList<int> value) {
+	while (value.getSize() > 0) {
+		int toAppend{ value.pop() };
+		for (auto& i : source) if (toAppend == i) continue;
+		source.append(toAppend);
+	}
+}
+
 // =================================================================================================================================
 //													Auxiliary ++ (DEBUG)
 // =================================================================================================================================
@@ -378,15 +515,15 @@ void TAS_Builder::exportTAS() {
 
 	std::ofstream outputFile("data/TAS.txt");
 	if (!outputFile) {
-		std::cerr << "Failed to open file for writing." << std::endl;
+		std::cerr << "Can't open data/TAS.txt" << std::endl;
 		return;
 	}
 
 	outputFile << "{";
-	for (auto& column : TAS_Return) {
+	for (const auto& column : TAS_Return) {
 		outputFile << "\n\t{ " << column.token << ", {";
 		cellC = 0;
-		for (auto& cell : column.entries) {
+		for (const auto& cell : column.entries) {
 			outputFile << "{ " << cell.groupStart << ", ";
 			int actionINT{ static_cast<int>(cell.action) };
 			if (actionINT > 0) outputFile << 'S' << actionINT;
@@ -402,4 +539,40 @@ void TAS_Builder::exportTAS() {
 
 	std::cout << "\nTAS.txt succefully generated";
 	outputFile.close();
+}
+void TAS_Builder::printFirstList() {
+	int count{ 0 };
+	for (const auto& first : firstList) {
+		std::cout << '\n' << ++count << " | " << first.leftSide_ID << " : "; for (auto& entry : first.firstList) std::cout << entry << ' ';
+	}
+}
+
+void TAS_Builder::exportFinal() {
+	int lines{ 0 };
+	// Generate TAS
+	std::ofstream output("data/import/tas.txt");
+	if (!output) {
+		std::cerr << "Can't open data/import/tas.txt" << std::endl;
+		return;
+	}
+	for (const auto& column : TAS_Return) {
+		output << column.token;
+		for (const auto& cell : column.entries) {
+			output << ' ' << cell.groupStart << ' ' << static_cast<int>(cell.action);
+		}
+		if (!(++lines >= TAS_Return.getSize())) output << '\n';
+	}
+	output.close();
+	lines = 0;
+	// Generate RULES
+	output.open("data/import/rules.txt");
+	if (!output) {
+		std::cerr << "Can't open data/import/rules.txt" << std::endl;
+		return;
+	}
+	for (const auto& rule : ruleSet) {
+		output << -rule.rule_ID << ' ' << rule.leftSide_ID << ' ' << rule.rightSide.getSize();
+		if (!(++lines >= ruleSet.getSize())) output << '\n';
+	}
+	output.close();
 }

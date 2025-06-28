@@ -53,5 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="data\TAS.txt" />
+    <Text Include="data\import\tas.txt" />
+    <Text Include="data\import\rules.txt" />
+    <Text Include="data\rules_definition.txt" />
+    <Text Include="data\import\rules_map.txt" />
   </ItemGroup>
 </Project>

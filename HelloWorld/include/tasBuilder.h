@@ -59,7 +59,8 @@ class TAS_Builder {
 	linkedList<column> TAS_Return{};
 public:
 	// Constructor
-	TAS_Builder(linkedList<architecture::rule> input, linkedList<architecture::first> firstList);
+	TAS_Builder(linkedList<architecture::rule> input);
+	TAS_Builder();
 	// Methods
 	void tasBuilder();
 	architecture::groupEntry initRule(const architecture::rule& target);
@@ -76,11 +77,22 @@ public:
 	architecture::groupTransition* transitionTo(const linkedList<architecture::groupEntry*>& ref);
 	int combineTransitions(const architecture::groupTransition& toCombine, architecture::groupTransition& combineTo);
 	column* findToken(int token);
+	void generateFirstList();
+	architecture::first* insertFirst(int id);
+	linkedList<int>& generateFirst(int id);
+	bool isEmptyProduction(int id);
+	void generateRules();
+
+	void exportFinal();
 	// Auxiliary ++ (DEBUG FUNCTIONS)
+private:
 	void printGroups();
 	void printTransitions();
 	void exportTAS();
+	void printFirstList();
 };
 
 void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toKeep, int toReplace);
 linkedList<int> appendSmart(linkedList<int> toModify, linkedList<int> toAppend);
+void appendNoRepeat(linkedList<int>& source, int value);
+void appendNoRepeat(linkedList<int>& source, linkedList<int> value);

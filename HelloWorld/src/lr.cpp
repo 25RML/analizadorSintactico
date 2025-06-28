@@ -2,6 +2,8 @@
 
 #include <utility>
 #include <string>
+#include <fstream>
+#include <sstream>
 
 #include "linkedList.h"
 #include "lexico.h"
@@ -31,6 +33,7 @@ action actionTable::getAction(int token, int group) {
 // ----------------------------------------------- Builders
 parserLR0::parserLR0(actionTable tableInput, linkedList<pRules> rulesList, std::string input) :
 	TAS{ tableInput }, stackList{ {0} }, analyzer{ input }, productionRules{rulesList} {}
+parserLR0::parserLR0(std::string input) : TAS{ importTAS() }, stackList{ {0} }, analyzer{input},productionRules{ importRULES() } {}
 // ----------------------------------------------- Analyze Inputs
 void parserLR0::analyzeInput() {
 	// Panic Mode (Temporal)
@@ -286,4 +289,68 @@ std::string printNT(int idNT) {
 	case -61: return "BI";
 	default: return "";
 	}
+}
+// ====================================================== IMPORT FUNCTIONS
+actionTable importTAS() {
+	linkedList<column> TAS_import;
+
+	std::ifstream importF("data/import/tas.txt");
+	if (!importF) {
+		std::cerr << "Can't open 'data/import/tas.txt'";
+		return TAS_import; 
+	}
+
+	std::cout << "\nImportando tas.txt...";
+	[[maybe_unused]] int count{ 0 };
+
+	std::string line{};
+	while (std::getline(importF, line)) {
+		std::istringstream iss(line);
+
+		column columnApp{};
+		int value{};
+		int aux{};
+
+		iss >> value;
+		columnApp.token = value;
+		while (iss >> value) {
+			iss >> aux;
+			columnApp.entries.append({ value,static_cast<action>(aux) });
+		}
+
+		//std::cout << "\nCargando entrada n" << ++count;
+		TAS_import.append(columnApp);
+	}
+	std::cout << "\n[OK] Importacion realizada con exito";
+
+	return actionTable{ TAS_import };
+}
+linkedList<pRules> importRULES() {
+	linkedList<pRules> rulesImport;
+
+	std::ifstream importF("data/import/rules.txt");
+	if (!importF) {
+		std::cerr << "Can't open 'data/import/rules.txt'";
+		return rulesImport;
+	}
+
+	std::cout << "\nImportando rules.txt...";
+	[[maybe_unused]]  int count{ 0 };
+
+	std::string line{};
+	while (std::getline(importF, line)) {
+		std::istringstream iss(line);
+
+		pRules ruleApp{};
+
+		iss >> ruleApp.id;
+		iss >> ruleApp.letter;
+		iss >> ruleApp.n_rightSide;
+
+		//std::cout << "\nCargando Regla " << ++count << " -> " << ruleApp.id << ' ' << ruleApp.letter << ' ' << ruleApp.n_rightSide << ' ';
+		rulesImport.append(ruleApp);
+	}
+
+	std::cout << "\n[OK] Importacion realizada con exito";
+	return rulesImport;
 }

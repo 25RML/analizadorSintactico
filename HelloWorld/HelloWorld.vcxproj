@@ -183,6 +183,10 @@
     <None Include="data\input.warp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="data\import\rules.txt" />
+    <Text Include="data\import\rules_map.txt" />
+    <Text Include="data\import\tas.txt" />
+    <Text Include="data\rules_definition.txt" />
     <Text Include="data\TAS.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

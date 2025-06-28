@@ -27,8 +27,9 @@ int main() {
 
 int main() {
     // Generate TAS
-    //TAS_Builder testTAS{ input::testInput,input::refFirst };
-    //testTAS.tasBuilder();
+    //TAS_Builder testTAS{ input::testInput };
+    TAS_Builder testTAS{};
+    testTAS.tasBuilder();
 
     std::cout << "\n\n";
 
@@ -40,25 +41,15 @@ int main() {
     }
     file.close();
 
-    //std::string input{};
-    //std::cout << " input: ";
-    //std::getline(std::cin, input);
 
     parserLR0 mainParser{
-        constant::TAS,
-        constant::rules,
         fileContent
     };
 
     mainParser.analyzeInput();
-    //"switch (hola) {}"
 
-    //lexicAnalyzer analyze{ fileContent };
-    //analyze.tokenTable();
-    //mainParser.analyzer.tokenTable();
 
     std::cout << "\n\nEND";
-
     std::cin >> line;
 
     return 0;
