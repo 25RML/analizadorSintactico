@@ -32,10 +32,12 @@ action actionTable::getAction(int token, int group) {
 // ----------------------------------------------------- CLASS: parserLR0
 // ----------------------------------------------- Builders
 parserLR0::parserLR0(actionTable tableInput, linkedList<pRules> rulesList, std::string input) :
-	TAS{ tableInput }, stackList{ {0} }, analyzer{ input }, productionRules{rulesList} {}
+	TAS{ tableInput }, stackList{ {0} }, analyzer{ input }, productionRules{ rulesList } {}
 parserLR0::parserLR0(std::string input) : TAS{ importTAS() }, stackList{ {0} }, analyzer{input},productionRules{ importRULES() } {}
 // ----------------------------------------------- Analyze Inputs
 void parserLR0::analyzeInput() {
+	importMap();
+	importIDMap();
 	// Panic Mode (Temporal)
 	linkedList<panicToken> saveState_tokens{};
 	linkedList<linkedList<std::string>> saveState_display{};
@@ -128,7 +130,7 @@ void parserLR0::analyzeInput() {
 			std::cout << "     |     Desplazar " << static_cast<int>(intersection);
 		}
 		else if (static_cast<int>(intersection) < 0) {
-			std::cout << intersection << "  ";
+			//std::cout << intersection << "  ";
 			std::pair<int, int> valueT{ numberOfRules(intersection) };
 			stackList.pop(2 * valueT.first);
 			printStack.pop(2 * valueT.first);
@@ -141,7 +143,7 @@ void parserLR0::analyzeInput() {
 			printStack.push(std::to_string(stackList[0]));						// printStack
 			takeNext = false;
 
-			std::cout << "     |     Reduce " << static_cast<int>(intersection) ; //printRule(intersection);
+			std::cout << "     |     Reduce "; printRule(intersection); // << static_cast<int>(intersection) 
 		}
 		else if (intersection == ACCEPT) {
 			std::cout << " - ACCEPT";
@@ -212,83 +214,11 @@ std::string printToken(int token) {
 	default: return "";
 	}
 }
-void printRule(int id) {
-	switch (id) {
-	case -1: std::cout << "A -> switch (id) {C} B"; break;
-	case -2: std::cout << "B -> A"; break;
-	case -3: std::cout << "B -> "; break;
-	case -4: std::cout << "C -> case num D : B break ; C"; break;
-	case -5: std::cout << "C -> "; break;
-	case -6: std::cout << "D -> .. num"; break;
-	case -7: std::cout << "D -> "; break;
-			
-	}
+void parserLR0::printRule(int id) {
+	std::cout << rulesMap[-id];
 }
-std::string printNT(int idNT) {
-	switch (idNT) {
-	case -1: return "A";
-	case -2: return "B";
-	case -3: return "C";
-	case -4: return "D";
-	case -5: return "E";
-	case -6: return "F";
-	case -7: return "G";
-	case -8: return "H";
-	case -9: return "I";
-	case -10: return "J";
-	case -11: return "K";
-	case -12: return "L";
-	case -13: return "M";
-	case -14: return "N";
-	case -15: return "O";
-	case -16: return "P";
-	case -17: return "Q";
-	case -18: return "R";
-	case -19: return "S";
-	case -20: return "T";
-	case -21: return "U";
-	case -22: return "V";
-	case -23: return "W";
-	case -24: return "X";
-	case -25: return "Y";
-	case -26: return "Z";
-	case -27: return "AA";
-	case -28: return "AB";
-	case -29: return "AC";
-	case -30: return "AD";
-	case -31: return "AE";
-	case -32: return "AF";
-	case -33: return "AG";
-	case -34: return "AH";
-	case -35: return "AI";
-	case -36: return "AJ";
-	case -37: return "AK";
-	case -38: return "AL";
-	case -39: return "AM";
-	case -40: return "AN";
-	case -41: return "AO";
-	case -42: return "AP";
-	case -43: return "AQ";
-	case -44: return "AR";
-	case -45: return "AS";
-	case -46: return "AT";
-	case -47: return "AU";
-	case -48: return "AV";
-	case -49: return "AW";
-	case -50: return "AX";
-	case -51: return "AY";
-	case -52: return "AZ";
-	case -53: return "BA";
-	case -54: return "BB";
-	case -55: return "BC";
-	case -56: return "BD";
-	case -57: return "BE";
-	case -58: return "BF";
-	case -59: return "BG";
-	case -60: return "BH";
-	case -61: return "BI";
-	default: return "";
-	}
+std::string parserLR0::printNT(int idNT) {
+	return idMap[idNT];
 }
 // ====================================================== IMPORT FUNCTIONS
 actionTable importTAS() {
@@ -353,4 +283,44 @@ linkedList<pRules> importRULES() {
 
 	std::cout << "\n[OK] Importacion realizada con exito";
 	return rulesImport;
+}
+
+void parserLR0::importMap() {
+
+	std::ifstream file("data/import/rules_map.txt");
+	std::string line;
+
+	while (getline(file, line)) {
+		std::istringstream iss(line);
+		int id;
+		iss >> id;
+		std::string restOfLine;
+		getline(iss, restOfLine); 
+		size_t firstChar = restOfLine.find_first_not_of(" \t");
+		if (firstChar != std::string::npos) restOfLine = restOfLine.substr(firstChar);
+
+		rulesMap[id] = restOfLine;
+	}
+
+	file.close();
+}
+
+void parserLR0::importIDMap() {
+
+	std::ifstream file("data/import/id_map.txt");
+	std::string line;
+
+	while (getline(file, line)) {
+		std::istringstream iss(line);
+		int id;
+		iss >> id;
+		std::string restOfLine;
+		getline(iss, restOfLine);
+		size_t firstChar = restOfLine.find_first_not_of(" \t");
+		if (firstChar != std::string::npos) restOfLine = restOfLine.substr(firstChar);
+
+		idMap[id] = restOfLine;
+	}
+
+	file.close();
 }

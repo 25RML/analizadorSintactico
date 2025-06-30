@@ -1,4 +1,6 @@
 #pragma once
+#include <unordered_map>
+
 #include "linkedList.h"
 #include "lr.h"
 
@@ -24,6 +26,11 @@ namespace architecture {
 		linkedList<int> groupOrigin{};
 		linkedList<architecture::groupEntry*> subEntries{};
 		int groupDestiny{};
+	};
+
+	struct entryVoid {
+		linkedList<int> groupOrigin{};
+		const groupEntry* entryRef{};
 	};
 }
 
@@ -52,11 +59,14 @@ class TAS_Builder {
 	linkedList<architecture::first> firstList{};
 	linkedList<architecture::groupEntry> groupStackRef{ {} };
 	linkedList<linkedList<architecture::groupEntry*>> groupList{ {} };
-	linkedList < linkedList<architecture::groupEntry*>*> groupPending{ {} };
+	linkedList<linkedList<architecture::groupEntry*>*> groupPending{ {} };
 	linkedList<architecture::groupTransition> transitionRef{};
+	linkedList<architecture::entryVoid> entryVoidList{};
 	int groupAt{ 0 };
 	int groupAnalizing{ 0 };
 	linkedList<column> TAS_Return{};
+
+	std::unordered_map<int, bool> cacheIfEmpty;
 public:
 	// Constructor
 	TAS_Builder(linkedList<architecture::rule> input);
@@ -84,6 +94,7 @@ public:
 	void generateRules();
 
 	void exportFinal();
+	void appendVoidRule(const architecture::entryVoid& entry);
 	// Auxiliary ++ (DEBUG FUNCTIONS)
 private:
 	void printGroups();
@@ -93,6 +104,7 @@ private:
 };
 
 void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toKeep, int toReplace);
+void updateGroupOrigin(linkedList<architecture::entryVoid>& stack, int toKeep, int toReplace);
 linkedList<int> appendSmart(linkedList<int> toModify, linkedList<int> toAppend);
 void appendNoRepeat(linkedList<int>& source, int value);
 void appendNoRepeat(linkedList<int>& source, linkedList<int> value);

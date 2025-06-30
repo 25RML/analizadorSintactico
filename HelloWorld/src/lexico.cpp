@@ -15,13 +15,13 @@ namespace {
 	}
 
 	std::string trim(std::string& object) {
-		std::size_t ind{ object.find_first_not_of(constant::whitespace) };
-		if (ind == std::string::npos) return "";
-		else object = object.substr(ind);
-		ind = object.find_last_not_of(constant::whitespace);
-		if (ind == std::string::npos) return "";
-		else object = object.substr(0, ind + 1);
-
+		std::size_t start = object.find_first_not_of(constant::whitespace);
+		if (start == std::string::npos) {
+			object.clear();
+			return object;
+		}
+		std::size_t end = object.find_last_not_of(constant::whitespace);
+		object = object.substr(start, end - start + 1);
 		return object;
 	}
 

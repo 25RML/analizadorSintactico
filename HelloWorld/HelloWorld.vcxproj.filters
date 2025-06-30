@@ -57,5 +57,6 @@
     <Text Include="data\import\rules.txt" />
     <Text Include="data\rules_definition.txt" />
     <Text Include="data\import\rules_map.txt" />
+    <Text Include="data\import\id_map.txt" />
   </ItemGroup>
 </Project>

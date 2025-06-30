@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <string>
+#include <map>
 
 #include "lexico.h"
 #include "linkedList.h"
@@ -126,6 +127,9 @@ class parserLR0 {
 	actionTable TAS{};
 	linkedList<int> stackList{};
 	linkedList<pRules> productionRules{};
+
+	std::map<int, std::string> rulesMap;
+	std::map<int, std::string> idMap;
 public:
 	lexicAnalyzer analyzer{};
 	// ----------------------------------------------- Builders
@@ -135,11 +139,14 @@ public:
 	void analyzeInput();
 	std::pair<int,int> numberOfRules(int index);
 	void panicMode();
+	void importMap();
+	void importIDMap();
+	// ----------------------------------------------- Auxiliary
+	void printRule(int id);
+	std::string printNT(int idNT);
 };
 
 std::string printToken(int token);
-void printRule(int id);
-std::string printNT(int idNT);
 
 actionTable importTAS();
 linkedList<pRules> importRULES();

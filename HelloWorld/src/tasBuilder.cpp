@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <map>
+#include <unordered_map>
 
 #include "lexico.h"
 #include "tasBuilder.h"
@@ -29,7 +30,7 @@ void TAS_Builder::tasBuilder() {
 	std::cout << "\n =========================== Creating Firsts:";
 	generateFirstList();
 	std::cout << "\n[OK] Finished creation of firsts ";
-	//printFirstList();
+	printFirstList();
 	// ================================ Groups Generation ================================
 	architecture::groupEntry startRule{ initRule(input::g_startRule) };
 
@@ -52,7 +53,7 @@ void TAS_Builder::tasBuilder() {
 		++groupAnalizing;
 	}
 	// All groups assembled, now procceed with the lalr
-	//printGroups();
+	printGroups();
 	std::cout << "\n Groups created with no issues, clearing...";
 	groupList.clear();
 	std::cout << "\n[OK] Groups cleared with no issues, proceeding...";
@@ -75,6 +76,7 @@ void TAS_Builder::tasBuilder() {
 		else {
 			updateGroupOrigin(transitionRef, transitionSave.groupDestiny, saveDestiny);
 			updateGroupOrigin(lalrTransition, transitionSave.groupDestiny, saveDestiny);
+			updateGroupOrigin(entryVoidList, transitionSave.groupDestiny, saveDestiny);
 			modified = false;
 		}
 	}
@@ -103,6 +105,18 @@ void TAS_Builder::tasBuilder() {
 			columnToModify->entries.append({ transition.groupDestiny,static_cast<action>(-rule->ruleRef->rule_ID) });
 		}
 	}
+	// Special : Void groups (Ej: A -> )
+	for (auto& voidE : entryVoidList) {
+		columnToModify = findToken(voidE.entryRef->anticipationToken);
+		if (!columnToModify) columnToModify = &TAS_Return.append({ evaluatingToken,{} });
+
+		
+		for (auto& origin : voidE.groupOrigin) {
+			std::cout << "\nCreated void entry -> " << origin << " : R" << voidE.entryRef->ruleRef->rule_ID;
+			columnToModify->entries.append({ origin,static_cast<action>(-voidE.entryRef->ruleRef->rule_ID) });
+		}
+	}
+
 	std::cout << "\n[OK] TAS created succesfully, number of columns generated -> " << TAS_Return.getSize();
 
 	exportTAS();
@@ -231,6 +245,9 @@ linkedList<int> TAS_Builder::getFirstFromRight(const architecture::groupEntry& t
 	if (tokenRef >= 0) return linkedList<int>{ tokenRef };
 	// Get firsts from not terminal
 	linkedList<int> firstL{ getFirstByID(tokenRef) };
+	if (isEmptyProduction(tokenRef)) {		// Iterate if at least one entry is repeated
+		appendNoRepeat(firstL, getFirstFromRight({ target.ruleRef,target.anticipationToken,target.pointer + 1 }));
+	}
 	// If firsts empty, return anticipation token
 	if (firstL.getSize() == 0) return linkedList<int>{ target.anticipationToken };
 	else return firstL;
@@ -246,7 +263,10 @@ linkedList< linkedList<architecture::groupEntry*>> TAS_Builder::getSimilars(cons
 	while (analyzeGroup.getSize() > 0) {
 		newEntry = true;
 		entrySave = analyzeGroup.pop();
-		if (entrySave->pointer >= entrySave->ruleRef->rightSide.getSize()) continue;	// If rule invalid, continue
+		if (entrySave->pointer >= entrySave->ruleRef->rightSide.getSize()) {		// If at the end of rule, dont continue
+			if (entrySave->ruleRef->rightSide.getSize() == 0) appendVoidRule({ {groupAnalizing},entrySave });
+			continue;
+		}
 		for (auto& groupSim : similars) {
 			if (groupSim[0]->ruleRef->rightSide[groupSim[0]->pointer] == entrySave->ruleRef->rightSide[entrySave->pointer]) {
 				groupSim.append(entrySave);
@@ -338,8 +358,6 @@ void TAS_Builder::generateFirstList() {
 	for (auto& rule : ruleSet) {
 		generateFirst(rule.leftSide_ID);
 	}
-
-
 }
 // Returns First List of ID, if ID doesn't has one, generates one
 linkedList<int>& TAS_Builder::generateFirst(int id) {
@@ -374,9 +392,19 @@ architecture::first* TAS_Builder::insertFirst(int id) {
 // Esta funcion devuelve verdadero si existe al menos una regla de produccion vacia con la id del parametro,
 // caso contrario, devuelve falso (cuando todas las producciones generan al menos un token)
 bool TAS_Builder::isEmptyProduction(int id) {
-	for (auto& rule : ruleSet) {
-		if (rule.leftSide_ID == id) if (rule.rightSide.getSize() == 0) return true;
+	// Returns cached result if it existed before
+	auto i = cacheIfEmpty.find(id);
+	if (i != cacheIfEmpty.end()) {
+		return i->second;
 	}
+	// Calculate if not
+	for (auto& rule : ruleSet) {
+		if (rule.leftSide_ID == id) if (rule.rightSide.getSize() == 0) {
+			cacheIfEmpty[id] = true;
+			return true;
+		}
+	}
+	cacheIfEmpty[id] = false;
 	return false;
 }
 // Esta funcion genera las reglas de produccion de referencia en base a lo introducido en el archivo "rules_definition.txt"
@@ -389,6 +417,7 @@ void TAS_Builder::generateRules() {
 	std::string saveBuffer{};
 
 	std::ofstream output("data/import/rules_map.txt");
+	std::ofstream outputID("data/import/id_map.txt");
 	std::ifstream file("data/rules_definition.txt");
 	std::string fileContent;
 	std::string line;
@@ -397,11 +426,16 @@ void TAS_Builder::generateRules() {
 	while (std::getline(file, line)) {
 		ruleApp.rightSide.clear();
 		lexicAnalyzer ruleAnalysis{ line };
-		if (ruleAnalysis.nextToken() == 600) {	// If token matches id definition
+		saveToken = ruleAnalysis.nextToken();
+		if (saveToken == 0) continue;
+		if (saveToken == 600) {	// If token matches id definition
 			saveBuffer = ruleAnalysis.getBuffer();
 			if (saveBuffer == "id") throw std::runtime_error("Can't place 'id' on leftside");
 			auto it = mapReference.find(saveBuffer);
-			if (it == mapReference.end()) mapReference[saveBuffer] = --letterID;	// id doesn't exists
+			if (it == mapReference.end()) {
+				mapReference[saveBuffer] = --letterID;
+				outputID << letterID << ' ' << saveBuffer << '\n';
+			}
 
 			ruleApp.rule_ID = ++ruleID;
 			ruleApp.leftSide_ID = mapReference[saveBuffer];
@@ -414,7 +448,10 @@ void TAS_Builder::generateRules() {
 			// Detected token ID
 			if (saveToken == 600 && (saveBuffer = ruleAnalysis.getBuffer()) != "id") {
 				auto it = mapReference.find(saveBuffer);
-				if (it == mapReference.end()) mapReference[saveBuffer] = --letterID; // id doesn't exists
+				if (it == mapReference.end()) {
+					mapReference[saveBuffer] = --letterID; // id doesn't exists
+					outputID << letterID << ' ' << saveBuffer << '\n';
+				}
 
 				saveToken = mapReference[saveBuffer];
 			}
@@ -426,7 +463,17 @@ void TAS_Builder::generateRules() {
 	}
 	file.close();
 	output.close();
+	outputID.close();
+}
 
+void TAS_Builder::appendVoidRule(const architecture::entryVoid& entry) {
+	for (auto& ref : entryVoidList) {
+		if (ref.entryRef == entry.entryRef) {
+			appendNoRepeat(ref.groupOrigin, entry.groupOrigin);
+			return;
+		}
+	}
+	entryVoidList.append(entry);
 }
 
 void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toKeep, int toReplace) {
@@ -455,6 +502,33 @@ void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toK
 		if (evaluate.groupDestiny == toReplace) evaluate.groupDestiny = toKeep;
 	}
 }
+
+void updateGroupOrigin(linkedList<architecture::entryVoid>& stack, int toKeep, int toReplace) {
+	bool foundKeep{};
+	int indexErase{ -1 };
+	int trueErase{ -1 };
+	for (auto& evaluate : stack) {
+		foundKeep = false;
+		indexErase = -1;
+		trueErase = -1;
+		for (auto& group : evaluate.groupOrigin) {
+			++indexErase;
+			if (group == toKeep) foundKeep = true;
+			if (group == toReplace) {
+				if (foundKeep) {
+					trueErase = indexErase;
+					break;
+				}
+				else {
+					group = toKeep;
+					break;
+				}
+			}
+		}
+		if (trueErase >= 0) evaluate.groupOrigin.erase(trueErase);
+	}
+}
+
 linkedList<int> appendSmart(linkedList<int> toModify, linkedList<int> toAppend) {
 	linkedList<int> returnList{};
 
