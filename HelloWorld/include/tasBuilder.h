@@ -108,3 +108,4 @@ void updateGroupOrigin(linkedList<architecture::entryVoid>& stack, int toKeep, i
 linkedList<int> appendSmart(linkedList<int> toModify, linkedList<int> toAppend);
 void appendNoRepeat(linkedList<int>& source, int value);
 void appendNoRepeat(linkedList<int>& source, linkedList<int> value);
+bool detectAmbiguity(const column* target, const int group);

@@ -181,6 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\input.warp" />
+    <None Include="data\last.meta" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="data\import\id_map.txt" />

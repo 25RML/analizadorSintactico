@@ -4,6 +4,7 @@
 #include <fstream>
 #include <map>
 #include <unordered_map>
+#include <conio.h>
 
 #include "lexico.h"
 #include "tasBuilder.h"
@@ -30,7 +31,7 @@ void TAS_Builder::tasBuilder() {
 	std::cout << "\n =========================== Creating Firsts:";
 	generateFirstList();
 	std::cout << "\n[OK] Finished creation of firsts ";
-	printFirstList();
+	//printFirstList();
 	// ================================ Groups Generation ================================
 	architecture::groupEntry startRule{ initRule(input::g_startRule) };
 
@@ -53,7 +54,7 @@ void TAS_Builder::tasBuilder() {
 		++groupAnalizing;
 	}
 	// All groups assembled, now procceed with the lalr
-	printGroups();
+	//printGroups();
 	std::cout << "\n Groups created with no issues, clearing...";
 	groupList.clear();
 	std::cout << "\n[OK] Groups cleared with no issues, proceeding...";
@@ -84,7 +85,7 @@ void TAS_Builder::tasBuilder() {
 	std::cout << "\n[OK] LALR created succesfully, number of transition rules generated -> " << transitionRef.getSize();
 	// ================================ TAS Generation ================================
 	std::cout << "\n =========================== TAS Creation Process:";
-	printTransitions();
+	//printTransitions();
 	TAS_Return.clear();
 	int evaluatingToken{};
 	column* columnToModify{};
@@ -94,6 +95,7 @@ void TAS_Builder::tasBuilder() {
 		columnToModify = findToken(evaluatingToken);
 		if (!columnToModify) columnToModify = &TAS_Return.append({ evaluatingToken,{} });
 		for (auto& groupO : transition.groupOrigin) {
+			if (detectAmbiguity(columnToModify, groupO)) std::cout << "\n [ADVERTENCIA] :: Entrada ambigua creada en el token " << columnToModify->token << " con estado " << groupO;
 			columnToModify->entries.append({ groupO,static_cast<action>(transition.groupDestiny) });
 		}
 		// Reduce
@@ -102,6 +104,7 @@ void TAS_Builder::tasBuilder() {
 			
 			columnToModify = findToken(rule->anticipationToken);
 			if (!columnToModify) columnToModify = &TAS_Return.append({ rule->anticipationToken, {} });
+			if (detectAmbiguity(columnToModify, transition.groupDestiny)) std::cout << "\n [ADVERTENCIA] :: Entrada ambigua creada en el token " << columnToModify->token << " con estado " << transition.groupDestiny;
 			columnToModify->entries.append({ transition.groupDestiny,static_cast<action>(-rule->ruleRef->rule_ID) });
 		}
 	}
@@ -113,12 +116,13 @@ void TAS_Builder::tasBuilder() {
 		
 		for (auto& origin : voidE.groupOrigin) {
 			std::cout << "\nCreated void entry -> " << origin << " : R" << voidE.entryRef->ruleRef->rule_ID;
+			if (detectAmbiguity(columnToModify, origin)) std::cout << "\n [ADVERTENCIA] :: Entrada ambigua creada en el token " << columnToModify->token << " con estado " << origin;
 			columnToModify->entries.append({ origin,static_cast<action>(-voidE.entryRef->ruleRef->rule_ID) });
 		}
 	}
 
-	std::cout << "\n[OK] TAS created succesfully, number of columns generated -> " << TAS_Return.getSize();
-
+	std::cout << "\n[OK] TAS creada exitosamente, numero de columnas generadas -> " << TAS_Return.getSize();
+	std::cout << "\n Pulse cualquier tecla para continuar... "; _getch();
 	exportTAS();
 	exportFinal();
 }
@@ -427,7 +431,7 @@ void TAS_Builder::generateRules() {
 		ruleApp.rightSide.clear();
 		lexicAnalyzer ruleAnalysis{ line };
 		saveToken = ruleAnalysis.nextToken();
-		if (saveToken == 0) continue;
+		if (saveToken == 0 || saveToken == 900) continue;
 		if (saveToken == 600) {	// If token matches id definition
 			saveBuffer = ruleAnalysis.getBuffer();
 			if (saveBuffer == "id") throw std::runtime_error("Can't place 'id' on leftside");
@@ -474,6 +478,13 @@ void TAS_Builder::appendVoidRule(const architecture::entryVoid& entry) {
 		}
 	}
 	entryVoidList.append(entry);
+}
+
+bool detectAmbiguity(const column* target, const int group) {
+	for (auto& entry : target->entries) {
+		if (entry.groupStart == group) return true;
+	}
+	return false;
 }
 
 void updateGroupOrigin(linkedList<architecture::groupTransition>& stack, int toKeep, int toReplace) {

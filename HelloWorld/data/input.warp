@@ -1,1 +1,40 @@
-int (as) int (3) int (4545) int ()
+## Operaciones Matematicas
+
+
+
+class mainClass<main, public>
+{
+	define int varTest = 0;
+	define prec varTest4<last> = 5;
+
+	define summon constructorDX() {}  # Obligatorio para que funcione el compilador
+
+	define int helpme()
+	{
+		throw 5;
+	}
+
+	define empty mainMethod<public> ()
+	{
+		throw;
+		
+		loop (int isad = 5; isad<56; id++) {
+		};
+	}
+
+	define int varTest3 = 0;
+	define int varTest2;
+
+	define int testTest<>;
+}
+
+define class mainClass
+{
+	define summon constructorDX() {}  # Obligatorio para que funcione el compilador
+
+	define empty mainMethod<public> ()
+	{
+		loop (int isad = 5; isad<56; id++) {
+		};
+	}
+}

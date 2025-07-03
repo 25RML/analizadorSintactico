@@ -1,6 +1,224 @@
-A : int ( C ) B
-B : A
-B :
-C : id
-C : 1
-C : 
+PROGRAMA : VAR_GLOBAL CLASE_PRIN BI
+
+VAR_GLOBAL : DEC_VAR ; VAR_GLOBAL
+VAR_GLOBAL :  
+
+DEC_VAR : DEFINE_VAR GTAG_INIT = EXPRESION
+
+DEFINE_VAR : define TIPO id
+
+TIPO : int
+TIPO : real
+TIPO : prec
+TIPO : flag
+TIPO : char
+TIPO : byte
+TIPO : chain
+TIPO : vector [ TIPO ]
+
+GTAG_INIT : < TAG_VAR >
+GTAG_INIT : 
+
+TAG_VAR : last
+TAG_VAR :  
+
+# ===================================================== EXPRESIONES
+
+EXPRESION : J I
+
+I : || J I
+I :  
+
+J : L K
+
+K : & L K
+K :  
+
+L : N M
+
+M : == N M
+M : != N M
+M :  
+
+N : Q O
+
+O : < Q O
+O : > Q O
+O : >= Q O
+O : <= Q O
+O :  
+
+Q : S R
+
+R : + S R
+R : - S R
+R :  
+
+S : U T
+
+T : ^ U T
+T :  
+
+U : X V
+
+V : * X V
+V : / X V
+V : % X V
+V : // X V
+V :  
+
+X : - Y
+X : + Y
+X : ! Y
+X : Y
+
+Y : ( EXPRESION )
+Y : VALOR
+
+VALOR : 1
+VALOR : 1.0
+VALOR : "a"
+VALOR : 'a'
+VALOR : true
+VALOR : id
+
+# ===================================================== CLASES
+
+CLASE_PRIN : class id < TAG_PRIN > { CLASS_BODY }
+
+TAG_PRIN : public , main
+TAG_PRIN : main , public
+
+#CLASS_BODY : DEC_ATR AJ BF
+
+CLASS_BODY : C_DEFINE CLASS_INSTR
+
+CLASS_INSTR : C_DEFINE CLASS_INSTR
+CLASS_INSTR : 
+
+C_DEFINE : DEFINE_ATR
+C_DEFINE : DEFINE_SUMMON 
+C_DEFINE : DEFINE_MET 
+
+
+# ============ ATRIBUTOS
+
+DEFINE_ATR : DEFINE_TYPE ATR_ASSIGN ;
+
+ATR_ASSIGN : = EXPRESION
+ATR_ASSIGN :
+
+# ============ METODOS
+
+DEFINE_MET  : DECL_MET ( ADD_ARG ) { INSTRUCCIONES }
+
+DECL_MET : define empty id TAGM_INIT
+DECL_MET : DEFINE_TYPE
+
+
+TAGM_INIT : < PUB_PRI STATIC >
+TAGM_INIT :
+
+STATIC : , static
+STATIC :  
+
+# ============ HELPER
+
+DEFINE_TYPE : DEFINE_VAR TAG_INIT
+
+TAG_INIT : < TAG_ATR >
+TAG_INIT :
+
+TAG_ATR : PUB_PRI TAG_ATR2
+TAG_ATR : 
+
+PUB_PRI : public
+PUB_PRI : private
+ 
+TAG_ATR2 : , static , last
+TAG_ATR2 : , static
+TAG_ATR2 : , last
+TAG_ATR2 : , last , static
+TAG_ATR2 : 
+
+
+# ============ SUMMON 
+
+DEFINE_SUMMON : define summon id ( ADD_ARG ) { INSTRUCCIONES }
+
+ADD_ARG : ARGUMENTO
+ADD_ARG :  
+
+MORE_ARG : , ARGUMENTO
+MORE_ARG :  
+
+ARGUMENTO : TIPO id MORE_ARG
+
+# ============ INSTRUCCIONES
+
+INSTRUCCIONES : INSTRUCCION ; INSTRUCCIONES
+INSTRUCCIONES :  
+
+INSTRUCCION : DEC_VAR
+INSTRUCCION : AO
+INSTRUCCION : AS
+INSTRUCCION : AV
+INSTRUCCION : AX
+INSTRUCCION : AZ
+INSTRUCCION : BA
+INSTRUCCION : BB
+INSTRUCCION : BC
+INSTRUCCION : id BD
+INSTRUCCION : throw RET_VALUE
+
+RET_VALUE : EXPRESION
+RET_VALUE : 
+
+AO : id AP ( AQ )
+
+AP : . id
+AP :  
+
+AQ : id AR
+AQ :  
+
+AR : , id AR
+AR :  
+
+AS : inspect id { select : AU AT }
+
+AT : select : AU AT
+AT :  
+
+AU : 1 { INSTRUCCIONES } jump ;
+AU : none { INSTRUCCIONES } jump ;
+
+AV : when ( EXPRESION ) { INSTRUCCIONES } AW
+
+AW : then ( EXPRESION ) { INSTRUCCIONES } AW
+AW : but { INSTRUCCIONES }
+AW :  
+
+AX : repeat AY
+
+AY : ( EXPRESION ) { AM }
+AY : { AM } if ( EXPRESION )
+
+AZ : loop ( int id = EXPRESION ; EXPRESION ; id BD ) { INSTRUCCIONES }
+
+BA : define id id = summon id ( AQ )
+
+BB : say ( EXPRESION )
+
+BC : id = read ( EXPRESION )
+
+BD : BE
+BD : = EXPRESION
+
+BE : ++
+BE : --
+
+
+
+BI : define class id { CLASS_BODY } BI
+BI :  
